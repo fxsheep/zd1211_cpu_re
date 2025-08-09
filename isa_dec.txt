@@ -1,0 +1,15 @@
+base: encoding (d=Rd,s=Rs,i=imm,x=don't care)     mnemonic
+----------------------------------------------------------------------
+9040: 1001 ddd0 01ii iiii                         MOV  Rd, #imm6
+9110: 1001 ddd1 0001 0ddd <imm16>                 LDR  Rd, [imm16]
+    //actually have don't cares:
+    //1101 sss1 0001 0xxx <imm16>
+A040: 1010 ddd0 01ii iiii                         OR   Rd, #imm6
+A108: 1010 ddd1 0000 1sss <imm16>                 OR   Rd, Rs, #imm16
+B040: 1011 ddd0 01ii iiii                         AND  Rd, #imm6
+B108: 1011 ddd1 0000 1sss <imm16>                 AND  Rd, Rs, #imm16
+D118: 1101 sss1 0001 1sss <imm16>                 STR  Rs, [imm16]
+    //actually have don't cares:
+    //1101 sss1 0001 xxxx <imm16>
+
+
