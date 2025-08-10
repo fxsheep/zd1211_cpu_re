@@ -1410,7 +1410,7 @@ FD59: 9311 //      LD  R1, #0xEC0A
 FD5A: EC0A //
 FD5B: B509 //      AND R2,R1,#0x00FF
 FD5C: 00FF //
-FD5D: 4440 //      ??? R2 (cond check)
+FD5D: 4440 //      ??? R2 (cond check) #0x00
 FD5E: 5E02 // condjmp FD61
 FD5F: 9F0F FD6C    JMP label_fd6c
 FD61: D51A
@@ -1431,7 +1431,7 @@ FD6F: 0040 //
 FD70: 4240 //      ??? R1 (cond check)
 FD71: 4E02 // condjmp FD74
 FD72: 9F0F FD81    JMP label_fd81
-FD74: 4441 //      ??? R2 (cond check)
+FD74: 4441 //      ??? R2 (cond check) #0x01
 FD75: 9E02 //      ??? (condjmp) FD78
 FD76: 9F0F FD7B    JMP label_fd7b
 FD78: 9240 //      MOV  R1,#0x00
@@ -1531,8 +1531,8 @@ FDD2: 9311
 FDD3: EC14
 FDD4: 0246
 FDD5: 92C1
-FDD6: B309
-FDD7: 00FF
+FDD6: B309 //      AND R1,R1,#0x00FF
+FDD7: 00FF //
 FDD8: 4501
 FDD9: 5E02
 FDDA: 9F0F FDF5    JMP label_fdf5
@@ -1898,10 +1898,10 @@ FF37: 9241
 FF38: D319
 FF39: EC05
 //label_ff3a:
-FF3A: 9311
-FF3B: BC20
-FF3C: 4240
-FF3D: 4E02
+FF3A: 9311 //      LDR  R1,[0xBC20]
+FF3B: BC20 //
+FF3C: 4240 //      CMP  R1,#0x00
+FF3D: 4E02 //
 FF3E: 9F0F FF3A    JMP label_ff3a
 FF40: D2C8
 FF41: F040 //      CALL sub_ff49

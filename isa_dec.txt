@@ -13,3 +13,8 @@ D118: 1101 sss1 0001 1sss <imm16>                 STR  Rs, [imm16]
     //1101 sss1 0001 xxxx <imm16>
 
 
+untested:
+4040: 0100 aaa0 01ii iiii                         CMP  Ra, #imm6
+4108: 0100 aaa1 0000 1aaa <imm16>                 CMP  Ra, #imm16
+
+
