@@ -151,8 +151,8 @@ F893: 8888
 F894: 8888
 
 //start of E2P_BOOT_CODE
-F895: 9108
-F896: EDFF
+F895: 9108 //       MOV R0,#0xEDFF            // Sets stack pointer
+F896: EDFF //
 F897: 9309
 F898: FEC7
 F899: 94D1
@@ -270,14 +270,14 @@ F907: FBEA
 F908: FBF4
 F909: FBFE
 F90A: FC08
-//jumptable
-F90B: FCE7
-F90C: FCEB
-F90D: FCF6
-F90E: FD35
-F90F: FD35
-F910: FD20
-F911: FD2B
+//jpt_f90b: (bDescriptorType - 1)
+F90B: FCE7 //jpt_f90b_dst0  // dev
+F90C: FCEB //jpt_f90b_dst1  // conf
+F90D: FCF6 //jpt_f90b_dst2  // str
+F90E: FD35 //jpt_f90b_dst3  // intf
+F90F: FD35 //jpt_f90b_dst4  // endp
+F910: FD20 //jpt_f90b_dst5  // qualif
+F911: FD2B //jpt_f90b_dst6  // otherspeed
 
 //sub_f912:
 F912: DA88
@@ -1006,14 +1006,14 @@ FBBD: 9A90
 FBBE: DA88
 FBBF: 0B08
 FBC0: 0001
-FBC1: 9311
-FBC2: EC09
-FBC3: 424B
+FBC1: 9311 //      LDR R1,[0xEC09]
+FBC2: EC09 //
+FBC3: 424B // cmp 0x0B
 FBC4: 8E02
 FBC5: 9F0F FC12    JMP label_fc12
 FBC7: 0309 //      ADD R1,R1,#0xF8FF
 FBC8: F8FF //
-FBC9: 9EC1
+FBC9: 9EC1 //      JMP [R1]
 FBCA: F040 //      CALL sub_fc15
 FBCB: FC15 //
 FBCC: 9F0F FC13    JMP label_fc13
@@ -1031,32 +1031,32 @@ FBDA: 9F0F FC12    JMP label_fc12
 FBDC: F040 //      CALL sub_fcb7
 FBDD: FCB7 //
 FBDE: 9F0F FC13    JMP label_fc13
-FBE0: 9311
-FBE1: EC0F
+FBE0: 9311 //      LDR R1,[0xEC0F]
+FBE1: EC0F //
 FBE2: 4240
 FBE3: 5E02
 FBE4: 9F0F FC12    JMP label_fc12
 FBE6: F040 //      CALL sub_fccb
 FBE7: FCCB //
 FBE8: 9F0F FC13    JMP label_fc13
-FBEA: 9311
-FBEB: EC0F
+FBEA: 9311 //      LDR R1,[0xEC0F]
+FBEB: EC0F //
 FBEC: 4240
 FBED: 5E02
 FBEE: 9F0F FC12    JMP label_fc12
 FBF0: F040 //      CALL sub_fd47
 FBF1: FD47 //
 FBF2: 9F0F FC13    JMP label_fc13
-FBF4: 9311
-FBF5: EC0F
+FBF4: 9311 //      LDR R1,[0xEC0F]
+FBF5: EC0F //
 FBF6: 4240
 FBF7: 5E02
 FBF8: 9F0F FC12    JMP label_fc12
 FBFA: F040 //      CALL sub_fd56
 FBFB: FD56 //
 FBFC: 9F0F FC13    JMP label_fc13
-FBFE: 9311
-FBFF: EC0F
+FBFE: 9311 //      LDR R1,[0xEC0F]
+FBFF: EC0F //
 FC00: 4240
 FC01: 5E02
 FC02: 9F0F FC12    JMP label_fc12
@@ -1281,26 +1281,29 @@ FCDA: 9702
 FCDB: 92C3
 FCDC: 9379
 FCDD: 9379
-FCDE: 0309
-FCDF: FFFF
+FCDE: 0309 //      ADD R1,R1,#-1
+FCDF: FFFF //
 FCE0: 4246 //000110 (0x06)
-FCE1: 8E02
+FCE1: 8E02 // greater than 0x06 is out of range
 FCE2: 9F0F FD35    JMP label_fd35
-FCE4: 0309
-FCE5: F90B
-FCE6: 9EC1
-FCE7: 9311 //      LDR R1,[0xEC13]
+FCE4: 0309 //      ADD R1,R1,#0xF90B
+FCE5: F90B //
+FCE6: 9EC1 //      JMP [R1]         //jpt_f90b
+//jpt_f90b_dst0:
+FCE7: 9311 //      LDR R1,[0xEC13]  //load USB dev desc ptr
 FCE8: EC13 //
 FCE9: 9F0F FD22    JMP label_fd22
+//jpt_f90b_dst1:
 FCEB: 92C2
 FCEC: B309 //      AND R1,R1,#0x00FF
 FCED: 00FF //
 FCEE: 4240         CMP R1,#0x00
 FCEF: 5E02
 FCF0: 9F0F FD35    JMP label_fd35
-FCF2: 9311 //      LDR R1,[0xEC14]
+FCF2: 9311 //      LDR R1,[0xEC14] //load USB conf desc ptr
 FCF3: EC14 //
 FCF4: 9F0F FD2D    JMP label_fd2d
+//jpt_f90b_dst2:
 FCF6: 92C2 // ??? R1 ???
 FCF7: B309 //      AND R1,R1,#0x00FF
 FCF8: 00FF //
@@ -1343,18 +1346,20 @@ FD1B: EC0D
 FD1C: 9311 // 9311 EC0D loads a pointer from 0xEC0D (to r1?), which points to the start of string desc.
 FD1D: EC0D // The loaded ptr is used by later code to determine desc length (from the first byte of desc)
 FD1E: 9F0F FD24    JMP label_fd24
-FD20: 9309
-FD21: EC16
+//jpt_f90b_dst5:
+FD20: 9309 //      MOV R1, #0xEC16   //0xEC16 stores Device Qualifier Descriptor directly
+FD21: EC16 //
 //label_fd22:
 FD22: D319
 FD23: EC0D
 //label_fd24:
 FD24: 92C1 // seems to load MEM[R1] into R1?
-FD25: B309 // AND R1,R1,#0x00FF //gets length from str desc header 
+FD25: B309 // AND R1,R1,#0x00FF //gets length from desc header 
 FD26: 00FF //
 FD27: D319 // stores R1 to 0xEC0E (xfer len)
 FD28: EC0E //
 FD29: 9F0F FD38    JMP label_fd38
+//jpt_f90b_dst6:
 FD2B: 9311
 FD2C: EC15
 //label_fd2d:
@@ -1365,7 +1370,7 @@ FD30: 92C1
 FD31: D319
 FD32: EC0E
 FD33: 9F0F FD38    JMP label_fd38
-//label_fd35:
+//label_fd35/jpt_f90b_dst3:
 //handles "requested string descriptor not found"
 FD35: 9240         MOV R1,#0x0
 FD36: 9F0F FD45    JMP label_fd45

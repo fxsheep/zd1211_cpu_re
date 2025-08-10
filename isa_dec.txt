@@ -1,18 +1,22 @@
 base: encoding (d=Rd,s=Rs,i=imm,x=don't care)     mnemonic                notes
----------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------
 0040: 0000 ddd0 01ii iiii                         ADD  Rd, #imm6          Rd = Rd + #imm6
 0108: 0000 ddd1 0000 1sss <imm16>                 ADD  Rd, Rs, #imm16     Rd = Rs + #imm16
 2040: 0010 ddd0 01ii iiii                         SUB  Rd, #imm6          Rd = Rd - #imm6
 2108: 0010 ddd1 0000 1sss <imm16>                 SUB  Rd, Rs, #imm16     Rd = Rs - #imm16
 9040: 1001 ddd0 01ii iiii                         MOV  Rd, #imm6          Rd = #imm6
+90C0: 1001 ddd0 1100 0sss                         LDR  Rd, [Rs]           Rd = MEM[Rs]
 9108: 1001 ddd1 0000 1ddd <imm16>                 MOV  Rd, #imm16         Rd = #imm16
 9110: 1001 ddd1 0001 0ddd <imm16>                 LDR  Rd, [imm16]        Rd = MEM[imm16]
     //actually have don't cares:
     //1101 sss1 0001 0xxx <imm16>
+//9EC0: 1001 1110 1100 0sss                         JMP  [Rs]               PC = MEM[Rs]
+    //seems a special case of 90C0. not sure if 9EC0 is conditional.
 A040: 1010 ddd0 01ii iiii                         OR   Rd, #imm6
 A108: 1010 ddd1 0000 1sss <imm16>                 OR   Rd, Rs, #imm16
 B040: 1011 ddd0 01ii iiii                         AND  Rd, #imm6
 B108: 1011 ddd1 0000 1sss <imm16>                 AND  Rd, Rs, #imm16
+D088: 1101 sss0 1000 1ddd                         STR  Rs, [Rd--]         MEM[Rd] = Rs; Rd--;
 D118: 1101 sss1 0001 1sss <imm16>                 STR  Rs, [imm16]
     //actually have don't cares:
     //1101 sss1 0001 xxxx <imm16>
@@ -21,14 +25,18 @@ D118: 1101 sss1 0001 1sss <imm16>                 STR  Rs, [imm16]
 untested:
 4040: 0100 aaa0 01ii iiii                         CMP  Ra, #imm6
 4108: 0100 aaa1 0000 1aaa <imm16>                 CMP  Ra, #imm16
+9088: 1001 ddd0 1000 1sss                         LDR  Rd, [Rs++]         Rd = MEM[Rs]; Rs++;
+9E00: 1001 1110 ???? ?iii                         JMP  . + #imm?          PC = PC + #imm 
+    // 9E00 is partially tested, imm length unknown yet. also not sure if it's conditional
 
 notes:
 b8 seems to be <imm16> enable?
 
+0040 (ADD R0, #0x0) seems to be used as NOP
 
 ---------------------------------------------------------------------------------------------
 CPU info: 
  8 GPRs: R0-R7
 Calling convention:
  R0 used as stack pointer
-
+ R7 is Program Counter (PC), points to the next insn
