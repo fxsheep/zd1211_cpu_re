@@ -39,4 +39,5 @@ CPU info:
  8 GPRs: R0-R7
 Calling convention:
  R0 used as stack pointer
+ R5 used as Link Register (LR)
  R7 is Program Counter (PC), points to the next insn

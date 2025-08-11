@@ -1,3 +1,22 @@
+0xec09: USB bRequest
+0xec0a: stores "USB_REQ_FIRMWARE_READ_DATA" start address(wValue)
+0xec0d: stores "USB_REQ_FIRMWARE_READ_DATA" current read address (internal loop),
+               or probably current USB ctrl xfer IN data address
+0xec13: ptr to USB device descriptor
+0xec14: ptr to USB conf descriptor
+
+EEPROM data area:
+0xf86f: String desc 0x10 "ZyDAS"
+0xf87a: String desc 0x20 "USB2.0 WLAN"
+0xf831: Device desc
+0xf83a: String desc 0x00 "04 03 09 04"
+
+BootCode area:
+0xf8b2: Config desc 1 
+0xf8c9: Config desc 2 
+
+------------------------------------------------
+
 F800: D08D
 F801: 08C1
 F802: 55CE
@@ -153,8 +172,8 @@ F894: 8888
 //start of E2P_BOOT_CODE
 F895: 9108 //       MOV R0,#0xEDFF            // Sets stack pointer
 F896: EDFF //
-F897: 9309
-F898: FEC7
+F897: 9309 //       MOV R1,#0xFEC7
+F898: FEC7 //
 F899: 94D1
 F89A: EE11
 F89B: D488
@@ -180,6 +199,7 @@ F8AE: F040 //  CALL sub_fee0
 F8AF: FEE0 //
 F8B0: EE41
 F8B1: 9A98
+
 F8B2: 0209
 F8B3: 002E
 F8B4: 0101
@@ -203,6 +223,7 @@ F8C5: 0701
 F8C6: 0405
 F8C7: 4003
 F8C8: 0100
+
 F8C9: 0209
 F8CA: 002E
 F8CB: 0101
@@ -257,19 +278,19 @@ F8FB: 7EFC
 F8FC: DFBF
 F8FD: FDFB
 F8FE: FDFB
-//jumptable
-F8FF: FBCA
-F900: FBCE
-F901: FC12
-F902: FBD2
-F903: FC12
-F904: FBD6
-F905: FBE0
-F906: FC12
-F907: FBEA
-F908: FBF4
-F909: FBFE
-F90A: FC08
+//jpt_f8ff: (Std bRequest)
+F8FF: FBCA //jpt_f8ff_dst0
+F900: FBCE //jpt_f8ff_dst1
+F901: FC12 //jpt_f8ff_dst2
+F902: FBD2 //jpt_f8ff_dst3
+F903: FC12 //jpt_f8ff_dst4
+F904: FBD6 //jpt_f8ff_dst5
+F905: FBE0 //jpt_f8ff_dst6  // GET_DESCRIPTOR
+F906: FC12 //jpt_f8ff_dst7
+F907: FBEA //jpt_f8ff_dst8
+F908: FBF4 //jpt_f8ff_dst9
+F909: FBFE //jpt_f8ff_dst10
+F90A: FC08 //jpt_f8ff_dst11
 //jpt_f90b: (bDescriptorType - 1)
 F90B: FCE7 //jpt_f90b_dst0  // dev
 F90C: FCEB //jpt_f90b_dst1  // conf
@@ -865,8 +886,8 @@ FB3D: 975B
 FB3E: 975B
 FB3F: 091B
 FB40: EC0C
-FB41: 9311
-FB42: EC07
+FB41: 9311 //      LDR R1,[0xEC07]
+FB42: EC07 //
 FB43: 4240
 FB44: 4E02
 FB45: 9F0F FB56    JMP label_fb56
@@ -874,13 +895,13 @@ FB47: 4309
 FB48: 0040
 FB49: 5E02
 FB4A: 9F0F FB5C    JMP label_fb5c
-FB4C: 9311
-FB4D: EC1B
-FB4E: 2241
-FB4F: 950A //???
+FB4C: 9311 //      LDR R1,[0xEC1B]
+FB4D: EC1B //
+FB4E: 2241 //      SUB R1,#0x01
+FB4F: 950A //      MOV R2,#0xFB54
 FB50: FB54 //
-FB51: D488
-FB52: DC88
+FB51: D488         STR R2,[R0--]
+FB52: DC88         STR R6,[R0--]
 FB53: 9A91
 FB54: 9F0F FB5F    JMP label_fb5f
 //label_fb56:
@@ -927,15 +948,17 @@ FB78: D319
 FB79: EC10
 FB7A: 9888
 FB7B: 9A90
+
+//sub_fb7c:
 FB7C: DA88
 FB7D: 0B08
 FB7E: 0001
 FB7F: 9240         MOV R1,#0x0
-FB80: D319
-FB81: EC11
-FB82: 9241
-FB83: D319
-FB84: BC0B
+FB80: D319  //     STR R1,[0xEC11]
+FB81: EC11  //
+FB82: 9241         MOV R1,#0x1
+FB83: D319  //     STR R1,[0xBC0B]
+FB84: BC0B  //
 FB85: 9888
 FB86: 9A90
 
@@ -1002,10 +1025,10 @@ FBBB: 8405
 FBBC: 9888
 FBBD: 9A90
 
-//sub_fbbe:
+//sub_fbbe: // USB Standard Request handler
 FBBE: DA88
-FBBF: 0B08
-FBC0: 0001
+FBBF: 0B08 //      ADD R5,R0,#0x0001
+FBC0: 0001 //
 FBC1: 9311 //      LDR R1,[0xEC09]
 FBC2: EC09 //
 FBC3: 424B // cmp 0x0B
@@ -1013,16 +1036,20 @@ FBC4: 8E02
 FBC5: 9F0F FC12    JMP label_fc12
 FBC7: 0309 //      ADD R1,R1,#0xF8FF
 FBC8: F8FF //
-FBC9: 9EC1 //      JMP [R1]
+FBC9: 9EC1 //      JMP [R1] //jpt_f8ff
+//jpt_f8ff_dst0:
 FBCA: F040 //      CALL sub_fc15
 FBCB: FC15 //
 FBCC: 9F0F FC13    JMP label_fc13
+//jpt_f8ff_dst1:
 FBCE: F040 //      CALL sub_fc2b
 FBCF: FC2B //
 FBD0: 9F0F FC13    JMP label_fc13
+//jpt_f8ff_dst3:
 FBD2: F040 //      CALL sub_fc3f
 FBD3: FC3F //
 FBD4: 9F0F FC13    JMP label_fc13
+//jpt_f8ff_dst5:
 FBD6: 9311
 FBD7: EC0F
 FBD8: 4240
@@ -1031,6 +1058,7 @@ FBDA: 9F0F FC12    JMP label_fc12
 FBDC: F040 //      CALL sub_fcb7
 FBDD: FCB7 //
 FBDE: 9F0F FC13    JMP label_fc13
+//jpt_f8ff_dst6:
 FBE0: 9311 //      LDR R1,[0xEC0F]
 FBE1: EC0F //
 FBE2: 4240
@@ -1039,6 +1067,7 @@ FBE4: 9F0F FC12    JMP label_fc12
 FBE6: F040 //      CALL sub_fccb
 FBE7: FCCB //
 FBE8: 9F0F FC13    JMP label_fc13
+//jpt_f8ff_dst8:
 FBEA: 9311 //      LDR R1,[0xEC0F]
 FBEB: EC0F //
 FBEC: 4240
@@ -1047,6 +1076,7 @@ FBEE: 9F0F FC12    JMP label_fc12
 FBF0: F040 //      CALL sub_fd47
 FBF1: FD47 //
 FBF2: 9F0F FC13    JMP label_fc13
+//jpt_f8ff_dst9:
 FBF4: 9311 //      LDR R1,[0xEC0F]
 FBF5: EC0F //
 FBF6: 4240
@@ -1055,6 +1085,7 @@ FBF8: 9F0F FC12    JMP label_fc12
 FBFA: F040 //      CALL sub_fd56
 FBFB: FD56 //
 FBFC: 9F0F FC13    JMP label_fc13
+//jpt_f8ff_dst10:
 FBFE: 9311 //      LDR R1,[0xEC0F]
 FBFF: EC0F //
 FC00: 4240
@@ -1063,15 +1094,16 @@ FC02: 9F0F FC12    JMP label_fc12
 FC04: F040 //      CALL sub_fd97
 FC05: FD97 //
 FC06: 9F0F FC13    JMP label_fc13
-FC08: 9311
-FC09: EC0F
+//jpt_f8ff_dst11:
+FC08: 9311 //      LDR R1,[0xEC0F]
+FC09: EC0F //
 FC0A: 4240
 FC0B: 5E02
 FC0C: 9F0F FC12    JMP label_fc12
 FC0E: F040 //      CALL sub_fdbd
 FC0F: FDBD //
 FC10: 9F0F FC13    JMP label_fc13
-//label_fc12:
+//label_fc12/jpt_f8ff_dst2:
 FC12: 9240         MOV R1,#0x0
 //label_fc13:
 FC13: 9888
@@ -1261,7 +1293,7 @@ FCC8: 9240         MOV R1,#0x0
 FCC9: 9888
 FCCA: 9A90
 
-//sub_fccb:
+//sub_fccb: //USB GET_DESCRIPTOR handler
 FCCB: DA88
 FCCC: 0B08
 FCCD: 0001
@@ -1814,14 +1846,14 @@ FEDD: 9A98
 FEDE: 0000
 FEDF: F9F0
 
-//sub_fee0:
+//sub_fee0: // bootcode main loop func
 FEE0: DA88
-FEE1: 2041
+FEE1: 2041         SUB R0,#0x01
 FEE2: 0B08
 FEE3: 0001
 FEE4: 9240         MOV R1,#0x0
-FEE5: D319
-FEE6: 9644
+FEE5: D319 //      STR R1,[0x9644]
+FEE6: 9644 //
 FEE7: 9512 //      LDR R2,[0xF81A]
 FEE8: F81A //
 FEE9: B30A //      AND R1,R2,#0x0100
@@ -1837,12 +1869,12 @@ FEF3: 4240
 FEF4: 4E02
 FEF5: 9F0F FEFD    JMP label_fefd
 //label_fef7:
-FEF7: 9311
-FEF8: 9644
-FEF9: A309
-FEFA: 0200
-FEFB: D319
-FEFC: 9644
+FEF7: 9311 //      LDR R1,[0x9644]
+FEF8: 9644 //
+FEF9: A309 //      OR R1,R1,#0x0200
+FEFA: 0200 //
+FEFB: D319 //      STR R1,[0x9644]
+FEFC: 9644 //
 //label_fefd:
 FEFD: 6309
 FEFE: 6980
@@ -1851,44 +1883,44 @@ FF00: 94C3
 FF01: B50A //      AND R2,R2,#0xFF7F
 FF02: FF7F //
 FF03: D4C1
-FF04: 9311
-FF05: F819
-FF06: B24F
+FF04: 9311 //      LDR R1,[0xF819]
+FF05: F819 //
+FF06: B24F         AND R1,#0x0F
 FF07: 424D
 FF08: 5E02
 FF09: 9F0F FF10    JMP label_ff10
-FF0B: 9255
-FF0C: D319
-FF0D: 902C
+FF0B: 9255         MOV R1,#0x15
+FF0C: D319 //      STR R1,[0x902C]
+FF0D: 902C //
 FF0E: 9F0F FF16    JMP label_ff16
 //label_ff10:
-FF10: 9644
-FF11: D71B
-FF12: 902C
-FF13: 926F
-FF14: D319
-FF15: 93EC
+FF10: 9644         MOV R3,#0x04
+FF11: D71B //      STR R3,[0x902C]
+FF12: 902C //
+FF13: 926F         MOV R1,#0x2F
+FF14: D319 //      STR R1,[0x93EC]
+FF15: 93EC //
 //label_ff16:
-FF16: 970B
-FF17: 00FE
-FF18: D71B
-FF19: 8540
+FF16: 970B //      MOV R3,#0x00FE
+FF17: 00FE //
+FF18: D71B //      STR R3,[0x8540]
+FF19: 8540 //
 FF1A: F040 //      CALL sub_ffbd
 FF1B: FFBD //
 FF1C: 92C5
-FF1D: 9240         MOV R1,#0x0
+FF1D: 9240
 FF1E: EE00
 FF1F: 0241
 FF20: 4270
 FF21: 8E44
-FF22: 9311
-FF23: EC04
+FF22: 9311 //      LDR R1,[0xEC04]
+FF23: EC04 //
 FF24: 4241
 FF25: 5E02
 FF26: 9F0F FF2D    JMP label_ff2d
-FF28: 9640
-FF29: D71B
-FF2A: EC04
+FF28: 9640         MOV R3,#0x0
+FF29: D71B //      STR R3,[0xEC04]
+FF2A: EC04 //
 FF2B: 9F0F EE00    JMP 0xEE00
 //label_ff2d:
 FF2D: 9309
@@ -1897,13 +1929,13 @@ FF2F: D319
 FF30: 8405
 FF31: F040 //      CALL sub_fa90
 FF32: FA90 //
-FF33: 970B
-FF34: FEDE
-FF35: D71B
-FF36: EC1B
-FF37: 9241
-FF38: D319
-FF39: EC05
+FF33: 970B //      MOV R3,#0xFEDE
+FF34: FEDE //
+FF35: D71B //      STR R3,[0xEC1B]
+FF36: EC1B //
+FF37: 9241         MOV R1,#0x01
+FF38: D319 //      STR R1,[0xEC05]
+FF39: EC05 //
 //label_ff3a:
 FF3A: 9311 //      LDR  R1,[0xBC20]
 FF3B: BC20 //
@@ -1913,7 +1945,7 @@ FF3E: 9F0F FF3A    JMP label_ff3a
 FF40: D2C8
 FF41: F040 //      CALL sub_ff49
 FF42: FF49 //
-FF43: 0041
+FF43: 0041         ADD R0,#0x01
 FF44: 9F0F FF3A    JMP label_ff3a
 FF46: 0041
 FF47: 9888
